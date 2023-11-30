@@ -1,0 +1,39 @@
+import dxcam
+import cv2
+import numpy as np
+import keyboard as kb
+
+# Carregando as imagens das cores desejadas
+img_color_green = cv2.imread('gre.png')  # Substitua pelo caminho da imagem da cor 1
+img_color_orange = cv2.imread('ora.png')  # Substitua pelo caminho da imagem da cor 2
+
+# Função para verificar a presença da cor na imagem
+def check_color_presence(frame, img_color):
+    # Convertendo a imagem para o espaço de cores necessário (por exemplo, BGR para RGB)
+    img_color = cv2.cvtColor(img_color, cv2.COLOR_BGR2RGB)
+
+    # Encontrando a correspondência da imagem de referência na tela capturada
+    result = cv2.matchTemplate(frame, img_color, cv2.TM_CCOEFF_NORMED)
+    
+    threshold = 0.8  # Ajuste o valor de limite conforme necessário
+    loc = np.where(result >= threshold)
+
+    return len(loc[0]) > 0  # Verifica se a correspondência foi encontrada
+
+# Inicializa a câmera DXcam
+camera = dxcam.create()
+
+
+while True:
+    while kb.is_pressed("F2"):
+        # Captura um quadro da câmera
+        frame = camera.grab()
+
+        if frame is not None:
+            # Verifica a presença das cores nos quadros capturados
+            color1_present = check_color_presence(frame, img_color_green)
+            color2_present = check_color_presence(frame, img_color_orange)
+
+            # Se uma das cores não estiver presente, realiza a ação (intercepta um clique, no caso)
+            if not color1_present and not color2_present:
+                print("yes")  # Apenas para verificar se está funcionando
