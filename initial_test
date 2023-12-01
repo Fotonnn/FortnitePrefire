@@ -5,6 +5,7 @@ import pyautogui
 import interception
 import time
 
+interception.auto_capture_devices(keyboard=True, mouse=True)
 
 low_green = np.array([43, 159, 170])
 high_green = np.array([63, 179, 250])
@@ -35,7 +36,9 @@ while True:
         else:
             print("No")
             interception.click()
-            time.sleep(0)  # Aumente o tempo de espera para reduzir a carga da CPU
+            time.sleep(0.1)  # Aumente o tempo de espera para reduzir a carga da CPU
+            interception.press("q")
+            interception.click()
     elif kb.is_pressed("F3"):  # Pressionar F3 para sair do loop
         break
     else:
