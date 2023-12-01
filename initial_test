@@ -4,58 +4,39 @@ import keyboard as kb
 import pyautogui
 import interception
 import time
-import os
 
-
-
-#img_green = cv2.imread("teste.png")
-#img_orange = cv2.imread("teste.png")
-    #green: [ 53 169 210] [ 43 159 170] [ 63 179 250]
-    #orange: [ 19 188 221] [  9 178 181] [ 29 198 261]
-
-#hsv_green = cv2.cvtColor(img_green, cv2.COLOR_BGR2HSV)
-#hsv_orange = cv2.cvtColor(img_orange, cv2.COLOR_BGR2HSV)
 
 low_green = np.array([43, 159, 170])
 high_green = np.array([63, 179, 250])
-#green_mask = cv2.inRange(hsv_green, low_green, high_green)
-#green = cv2.bitwise_and(img_green, img_green, mask=green_mask)
 
 low_orange = np.array([9, 178, 181])
 high_orange = np.array([29, 198, 261])
-
-#orange_mask = cv2.inRange(hsv_orange, low_orange, high_orange)
-#orange = cv2.bitwise_and(img_orange, img_orange, mask=orange_mask)
-
-#cv2.imshow("Image", orange_mask)
-#cv2.waitKey(0)
-#white_pixels = cv2.countNonZero(orange_mask)
-#if white_pixels > 100:
-#    print("Yes")
-#else:
-#    print("No")
-#
-#cv2.imshow("Image", green_mask)
-#cv2.waitKey(0)
-#white_pixels = cv2.countNonZero(green_mask)
-#if white_pixels > 100:
- #   print("Yes")
-#else:
-#    print("No")
-
+#[  9 178 181] [ 29 198 261]
 while True:
     if kb.is_pressed("F2"):
-        frame = pyautogui.screenshot("temp.png")
-        img = cv2.imread("temp.png")
+        screenshot = pyautogui.screenshot()  # Captura apenas uma região específica
+        img = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
         green_mask = cv2.inRange(hsv, low_green, high_green)
-        white_pixels = cv2.countNonZero(green_mask)
-        if white_pixels > 100:  
+        orange_mask = cv2.inRange(hsv, low_orange, high_orange)
+
+        orange_pixels = cv2.countNonZero(orange_mask)
+        green_pixels = cv2.countNonZero(green_mask)
+        #cv2.imshow("Image", orange_mask)
+        #cv2.waitKey(0)
+        
+        if green_pixels > 100:
             print("Yes")
-            time.sleep(0)
+            time.sleep(0.1)  # Aumente o tempo de espera para reduzir a carga da CPU
+        elif orange_pixels > 100:
+            print("Yes, orange")
+            time.sleep(0.1)
         else:
             print("No")
             interception.click()
-            time.sleep(0)
+            time.sleep(0)  # Aumente o tempo de espera para reduzir a carga da CPU
+    elif kb.is_pressed("F3"):  # Pressionar F3 para sair do loop
+        break
     else:
-        time.sleep(0)
+        time.sleep(0.1)  # Aumente o tempo de espera para reduzir a carga da CPU
