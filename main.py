@@ -1,14 +1,15 @@
+import interception
 import cv2
 import numpy as np
-import interception
 import time
 import dxcam
 import threading
 import keyboard as kb
 
-low_green = np.array([43, 159, 170])
-high_green = np.array([63, 179, 250])
 
+low_green = np.array([43, 161, 164])
+high_green = np.array([63, 181, 244])
+#[ 43 161 164] [ 63 181 244]
 low_orange = np.array([9, 178, 181])
 high_orange = np.array([29, 198, 261])
 
@@ -17,8 +18,8 @@ largura_da_tela = 1920  # Substitua pelo valor correto da largura da sua tela
 altura_da_tela = 1080  # Substitua pelo valor correto da altura da sua tela
 
 # Calculando as coordenadas do quadrado no centro da tela
-largura_quadrado = 1200
-altura_quadrado = 600
+largura_quadrado = 900
+altura_quadrado = 700
 
 # Calculando as coordenadas do quadrado no centro da tela
 left = (largura_da_tela - largura_quadrado) // 2
@@ -54,7 +55,10 @@ while True:
         orange_mask = cv2.inRange(hsv, low_orange, high_orange)
         orange_pixels = cv2.countNonZero(orange_mask)
 
-        if orange_pixels < 100:
+        green_mask = cv2.inRange(hsv, low_green, high_green)
+        green_pixels = cv2.countNonZero(green_mask)
+
+        if green_pixels < 300 and orange_pixels < 300:
             interception.click()
         time.sleep(0.05)
     else:
