@@ -6,34 +6,28 @@ import dxcam
 import threading
 import keyboard as kb
 
+interception.auto_capture_devices(keyboard=True, mouse=True)
 
 low_green = np.array([43, 161, 164])
 high_green = np.array([63, 181, 244])
 #[ 43 161 164] [ 63 181 244]
 low_orange = np.array([9, 178, 181])
 high_orange = np.array([29, 198, 261])
-
-# Tamanho da tela
-largura_da_tela = 1920  # Substitua pelo valor correto da largura da sua tela
-altura_da_tela = 1080  # Substitua pelo valor correto da altura da sua tela
-
+#231, 231, 1599, 787
+#538, 301, 1326, 739
 # Calculando as coordenadas do quadrado no centro da tela
-largura_quadrado = 900
-altura_quadrado = 700
-
-# Calculando as coordenadas do quadrado no centro da tela
-left = (largura_da_tela - largura_quadrado) // 2
-top = (altura_da_tela - altura_quadrado) // 2
-right = left + largura_quadrado
-bottom = top + altura_quadrado
+left = 538
+top = 301
+right = 1326
+bottom = 739
 
 camera = dxcam.create()
 is_cam_on = False
 
-def monitor_tecla():
+def monitor_tecla(tecla_ativacao):
     global is_cam_on
     while True:
-        if kb.is_pressed("F2"):
+        if kb.is_pressed(tecla_ativacao):
             if not is_cam_on:
                 camera.start(region=(left, top, right, bottom), target_fps=120)
                 is_cam_on = True
@@ -42,7 +36,10 @@ def monitor_tecla():
             is_cam_on = False
         time.sleep(0.1)
 
-tecla_thread = threading.Thread(target=monitor_tecla)
+print("Pressione a tecla desejada para ativar a câmera:")
+tecla_escolhida = kb.read_event(suppress=True).name
+print("Tecla escolhida! Tecla: ", tecla_escolhida)
+tecla_thread = threading.Thread(target=monitor_tecla, args=(tecla_escolhida,))
 tecla_thread.daemon = True
 tecla_thread.start()
 
