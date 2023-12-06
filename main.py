@@ -51,6 +51,8 @@ while True:
 
         if combined_pixels < 300:
             interception.click()
+            interception.key_down("q")
+            interception.click()
         time.sleep(0.05)
     else:
         time.sleep(2)
