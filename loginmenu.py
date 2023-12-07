@@ -100,7 +100,7 @@ class api:
         if json["newSession"]:
             time.sleep(0.1)
 
-    def register(self, user, password, license, hwid=None):
+    def register(self, user, password, license, hwid=None) -> bool:
         self.checkinit()
         if hwid is None:
             hwid = others.get_hwid()
@@ -119,14 +119,16 @@ class api:
         response = self.__do_request(post_data)
 
         json = jsond.loads(response)
-
+        success = False
         if json["success"]:
             print(json["message"])
             self.__load_user_data(json["info"])
+            success = True
         else:
             print(json["message"])
             time.sleep(3)
             os._exit(1)
+        return success
 
     def upgrade(self, user, license):
         self.checkinit()
@@ -172,15 +174,17 @@ class api:
         response = self.__do_request(post_data)
 
         json = jsond.loads(response)
-
+        success = False
         if json["success"]:
             self.__load_user_data(json["info"])
             print(json["message"])
+            success = True
         else:
             print(json["message"])
             time.sleep(3)
             os._exit(1)
-
+        return success
+    
     def license(self, key, hwid=None):
         self.checkinit()
         if hwid is None:
@@ -611,6 +615,7 @@ import os
 import hashlib
 from time import sleep
 from datetime import datetime
+from menu import Menu
 
 def getchecksum():
     md5_hash = hashlib.md5()
@@ -638,12 +643,19 @@ def register():
     username = entry1_var.get()
     password = entry2_var.get()
     key = entry3_var.get()
-    keyauthapp.register(username, password, key)
+    success = keyauthapp.register(username, password, key)
+
+    if success:
+        print("yes finnaly")
 
 def login():
     username = entry1_var.get()
     password = entry2_var.get()
-    keyauthapp.login(username, password)
+    success = keyauthapp.login(username, password)
+    if success:
+        print("nice login")
+        root.destroy()
+        Menu.execApp()
 
 
 frame = customtkinter.CTkFrame(master=root)
