@@ -6,7 +6,7 @@ import dxcam
 import threading
 import keyboard as kb
 
-interception.auto_capture_devices(keyboard=True, mouse=True)
+from menu import Menu
 
 low_green = np.array([43, 161, 164])
 high_green = np.array([63, 181, 244])
@@ -28,15 +28,14 @@ def monitor_tecla(tecla_ativacao):
             if not is_cam_on:
                 camera.start(region=(left, top, right, bottom), target_fps=30)
                 is_cam_on = True
-        elif is_cam_on:
-            camera.stop()
-            is_cam_on = False
-        time.sleep(0.1)
+            elif is_cam_on:
+                camera.stop()
+                is_cam_on = False
+            time.sleep(0.1)
 
-print("Pressione a tecla desejada para ativar a câmeraa:")
-tecla_escolhida = kb.read_event(suppress=True).name
-print("Tecla escolhida! Tecla: ", tecla_escolhida)
-tecla_thread = threading.Thread(target=monitor_tecla, args=(tecla_escolhida,))
+
+print("Tecla escolhida! Tecla: ", Menu.tecla_escolhida)
+tecla_thread = threading.Thread(target=monitor_tecla, args=(Menu.tecla_escolhida,))
 tecla_thread.daemon = True
 tecla_thread.start()
 

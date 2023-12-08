@@ -1,188 +1,93 @@
-'''
-KeyAuth.cc Python Example
-
-Go to https://keyauth.cc/app/ and click the Python tab. Copy that code and replace the existing keyauthapp instance in this file.
-
-If you get an error saying it can't find module KeyAuth, try following this https://github.com/KeyAuth/KeyAuth-Python-Example#how-to-compile
-
-If that doesn't work for you, you can paste the contents of KeyAuth.py ABOVE this comment and then remove the "from keyauth import api" and that should work too.
-
-READ HERE TO LEARN ABOUT KEYAUTH FUNCTIONS https://github.com/KeyAuth/KeyAuth-Python-Example#keyauthapp-instance-definition
-'''
-from keyauth import api
-
-import sys
+import cv2
+import numpy as np
 import time
-import platform
-import os
-import hashlib
-from time import sleep
-from datetime import datetime
+import dxcam
+import threading
+import tkinter as tk
+from tkinter import messagebox
+import interception
+import keyboard as kb
 
-# import json as jsond
-# ^^ only for auto login/json writing/reading
+low_green = np.array([43, 161, 164])
+high_green = np.array([63, 181, 244])
+low_orange = np.array([9, 178, 181])
+high_orange = np.array([29, 198, 261])
 
-# watch setup video if you need help https://www.youtube.com/watch?v=L2eAQOmuUiA
+left = 538
+top = 301
+right = 1326
+bottom = 739
 
-def clear():
-    if platform.system() == 'Windows':
-        os.system('cls & title Python Example')  # clear console, change title
-    elif platform.system() == 'Linux':
-        os.system('clear')  # clear console
-        sys.stdout.write("\x1b]0;Python Example\x07")  # change title
-    elif platform.system() == 'Darwin':
-        os.system("clear && printf '\e[3J'")  # clear console
-        os.system('''echo - n - e "\033]0;Python Example\007"''')  # change title
+camera = dxcam.create()
+is_cam_on = False
+is_detection_enabled = False
+activation_key = None
 
-print("Initializing")
+def set_activation_key():
+    global activation_key
+    activation_key = kb.read_event(suppress=True).name
+    messagebox.showinfo("Activation Key", f"Activation key set to: {activation_key}")
 
+def toggle_camera():
+    global is_cam_on
+    if not is_cam_on:
+        camera.start(region=(left, top, right, bottom), target_fps=30)
+        is_cam_on = True
+    else:
+        camera.stop()
+        is_cam_on = False
 
-def getchecksum():
-    md5_hash = hashlib.md5()
-    file = open(''.join(sys.argv), "rb")
-    md5_hash.update(file.read())
-    digest = md5_hash.hexdigest()
-    return digest
+def toggle_detection():
+    global is_detection_enabled
+    is_detection_enabled = not is_detection_enabled
+    if is_detection_enabled:
+        messagebox.showinfo("Detection", "Detection Enabled")
+    else:
+        messagebox.showinfo("Detection", "Detection Disabled")
 
+def monitor_detection():
+    while True:
+        if is_detection_enabled and is_cam_on:
+            image = camera.get_latest_frame()  
+            img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-keyauthapp = api(
-    name = "PrefireScript",
-    ownerid = "INgrvPEN4z",
-    secret = "134b98995a89749a365fc9f43ed8e260730abab4b0d5a7b6b67fe764c39755a3",
-    version = "1.0",
-    hash_to_check = getchecksum()
-)
+            combined_mask = cv2.inRange(hsv, low_green, high_green) + cv2.inRange(hsv, low_orange, high_orange)
+            combined_pixels = cv2.countNonZero(combined_mask)
 
-def answer():
-    try:
-        print("""1.Login
-2.Register
-3.Upgrade
-4.License Key Only
-        """)
-        ans = input("Select Option: ")
-        if ans == "1":
-            user = input('Provide username: ')
-            password = input('Provide password: ')
-            keyauthapp.login(user, password)
-        elif ans == "2":
-            user = input('Provide username: ')
-            password = input('Provide password: ')
-            license = input('Provide License: ')
-            keyauthapp.register(user, password, license)
-        elif ans == "3":
-            user = input('Provide username: ')
-            license = input('Provide License: ')
-            keyauthapp.upgrade(user, license)
-        elif ans == "4":
-            key = input('Enter your license: ')
-            keyauthapp.license(key)
+            if combined_pixels < 300:
+                interception.click()
+                interception.key_down("q")
+                interception.click()
+            time.sleep(0.05)
         else:
-            print("\nInvalid option")
-            sleep(1)
-            clear()
-            answer()
-    except KeyboardInterrupt:
-        os._exit(1)
+            time.sleep(2)
 
+def monitor_activation_key():
+    global is_cam_on
+    while True:
+        if kb.is_pressed(activation_key):
+            toggle_camera()
+            time.sleep(0.5)  # Adjust this delay as needed to prevent rapid toggling
+        time.sleep(0.1)
 
-answer()
+# Interface
+root = tk.Tk()
+root.title("Color Detection Program")
 
-'''try:
-    if os.path.isfile('auth.json'): #Checking if the auth file exist
-        if jsond.load(open("auth.json"))["authusername"] == "": #Checks if the authusername is empty or not
-            print("""
-1. Login
-2. Register
-            """)
-            ans=input("Select Option: ")  #Skipping auto-login bc auth file is empty
-            if ans=="1": 
-                user = input('Provide username: ')
-                password = input('Provide password: ')
-                keyauthapp.login(user,password)
-                authfile = jsond.load(open("auth.json"))
-                authfile["authusername"] = user
-                authfile["authpassword"] = password
-                jsond.dump(authfile, open('auth.json', 'w'), sort_keys=False, indent=4)
-            elif ans=="2":
-                user = input('Provide username: ')
-                password = input('Provide password: ')
-                license = input('Provide License: ')
-                keyauthapp.register(user,password,license) 
-                authfile = jsond.load(open("auth.json"))
-                authfile["authusername"] = user
-                authfile["authpassword"] = password
-                jsond.dump(authfile, open('auth.json', 'w'), sort_keys=False, indent=4)
-            else:
-                print("\nNot Valid Option") 
-                os._exit(1) 
-        else:
-            try: #2. Auto login
-                with open('auth.json', 'r') as f:
-                    authfile = jsond.load(f)
-                    authuser = authfile.get('authusername')
-                    authpass = authfile.get('authpassword')
-                    keyauthapp.login(authuser,authpass)
-            except Exception as e: #Error stuff
-                print(e)
-    else: #Creating auth file bc its missing
-        try:
-            f = open("auth.json", "a") #Writing content
-            f.write("""{
-    "authusername": "",
-    "authpassword": ""
-}""")
-            f.close()
-            print ("""
-1. Login
-2. Register
-            """)#Again skipping auto-login bc the file is empty/missing
-            ans=input("Select Option: ") 
-            if ans=="1": 
-                user = input('Provide username: ')
-                password = input('Provide password: ')
-                keyauthapp.login(user,password)
-                authfile = jsond.load(open("auth.json"))
-                authfile["authusername"] = user
-                authfile["authpassword"] = password
-                jsond.dump(authfile, open('auth.json', 'w'), sort_keys=False, indent=4)
-            elif ans=="2":
-                user = input('Provide username: ')
-                password = input('Provide password: ')
-                license = input('Provide License: ')
-                keyauthapp.register(user,password,license)
-                authfile = jsond.load(open("auth.json"))
-                authfile["authusername"] = user
-                authfile["authpassword"] = password
-                jsond.dump(authfile, open('auth.json', 'w'), sort_keys=False, indent=4)
-            else:
-                print("\nNot Valid Option") 
-                os._exit(1) 
-        except Exception as e: #Error stuff
-            print(e)
-            os._exit(1) 
-except Exception as e: #Error stuff
-    print(e)
-    os._exit(1)'''
+btn_set_key = tk.Button(root, text="Set Activation Key", command=set_activation_key)
+btn_set_key.pack()
 
+checkbox_detection = tk.Checkbutton(root, text="Enable Detection", command=toggle_detection)
+checkbox_detection.pack()
 
-print("\nUser data: ")
-print("Username: " + keyauthapp.user_data.username)
-print("IP address: " + keyauthapp.user_data.ip)
-print("Hardware-Id: " + keyauthapp.user_data.hwid)
+# Start detection and activation key monitoring in separate threads
+detection_thread = threading.Thread(target=monitor_detection)
+detection_thread.daemon = True
+detection_thread.start()
 
-subs = keyauthapp.user_data.subscriptions  # Get all Subscription names, expiry, and timeleft
-for i in range(len(subs)):
-    sub = subs[i]["subscription"]  # Subscription from every Sub
-    expiry = datetime.utcfromtimestamp(int(subs[i]["expiry"])).strftime(
-        '%Y-%m-%d %H:%M:%S')  # Expiry date from every Sub
-    timeleft = subs[i]["timeleft"]  # Timeleft from every Sub
+activation_key_thread = threading.Thread(target=monitor_activation_key)
+activation_key_thread.daemon = True
+activation_key_thread.start()
 
-    print(f"[{i + 1} / {len(subs)}] | Subscription: {sub} - Expiry: {expiry} - Timeleft: {timeleft}")
-
-print("Created at: " + datetime.utcfromtimestamp(int(keyauthapp.user_data.createdate)).strftime('%Y-%m-%d %H:%M:%S'))
-print("Last login at: " + datetime.utcfromtimestamp(int(keyauthapp.user_data.lastlogin)).strftime('%Y-%m-%d %H:%M:%S'))
-print("Expires at: " + datetime.utcfromtimestamp(int(keyauthapp.user_data.expires)).strftime('%Y-%m-%d %H:%M:%S'))
-print("\nExiting in five seconds..")
-sleep(5)
-os._exit(1)
+root.mainloop()
