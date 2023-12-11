@@ -194,7 +194,7 @@ class api:
             print(json["message"])
             os._exit(1)
 
-    def license(self, key, hwid=None) -> bool:
+    def license(self, key, hwid=None):
         self.checkinit()
         if hwid is None:
             hwid = others.get_hwid()
@@ -215,15 +215,12 @@ class api:
         response = encryption.decrypt(response, self.enckey, init_iv)
 
         json = jsond.loads(response)
-        success = False
         if json["success"]:
             self.__load_user_data(json["info"])
             print("successfully logged into license")
-            success = True
         else:
             print(json["message"])
             os._exit(1)
-        return success
 
     def var(self, name):
         self.checkinit()

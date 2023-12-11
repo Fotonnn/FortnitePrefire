@@ -34,10 +34,9 @@ root.title("Prefire - Foton")
 
 def login():
     key = entry3_var.get()
-    success = keyauthapp.license(key)
-    if success:
-        root.destroy()
-        Menu.execApp()
+    keyauthapp.license(key)
+    root.destroy()
+    Menu.start_menu()
 
 
 frame = customtkinter.CTkFrame(master=root)
@@ -52,4 +51,6 @@ entry3.pack(pady=12, padx=10)
 
 login_button = customtkinter.CTkButton(master=frame, text="Logar", command=login)
 login_button.pack(pady=6, padx=10)
-root.mainloop()
+
+if __name__ == "__main__":
+    root.mainloop()
